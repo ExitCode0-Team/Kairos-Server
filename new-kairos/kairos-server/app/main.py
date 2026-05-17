@@ -38,7 +38,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
-    allow_credentials=True,
+    allow_credentials=False,   # must be False when allow_origins=["*"]
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -75,16 +75,19 @@ app.include_router(settings.router)
 app.include_router(preferences.router)
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
 def root() -> dict[str, str]:
     return {"service": "kairos-server", "docs": "/docs", "health": "/v1/health"}
 
 
 def run() -> None:
+    import os
     import uvicorn
 
     s = get_settings()
-    uvicorn.run("app.main:app", host=s.host, port=s.port, reload=True)
+    # Render injects PORT; fall back to settings value for local dev
+    port = int(os.environ.get("PORT", s.port))
+    uvicorn.run("app.main:app", host="0.0.0.0", port=port, reload=False)
 
 
 if __name__ == "__main__":

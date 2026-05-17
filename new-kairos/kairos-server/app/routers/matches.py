@@ -7,6 +7,7 @@ POST /v1/matches/{id}/apply           — record an application
 """
 
 import logging
+from datetime import datetime, timezone
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, HTTPException, Query
@@ -58,13 +59,16 @@ def get_matches(
         .eq("user_id", str(user_id))
     )
 
+    today = datetime.now(timezone.utc).date().isoformat()  # "YYYY-MM-DD"
+
     if tab == "high":
         query = query.gte("score", 80)
     elif tab == "new":
-        query = query.gte("posted_at", "now()::date")
+        query = query.gte("posted_at", today)
 
     if q:
-        query = query.or_(f"company.ilike.%{q}%,role.ilike.%{q}%")
+        safe_q = q.replace('"', "")  # strip quotes so the filter string stays valid
+        query = query.or_(f'company.ilike."%{safe_q}%",role.ilike."%{safe_q}%"')
 
     sort_col = {"match": "score", "recent": "posted_at", "score": "score"}.get(sort, "score")
     query = query.order(sort_col, desc=True)
@@ -74,9 +78,10 @@ def get_matches(
     if tab == "high":
         count_query = count_query.gte("score", 80)
     elif tab == "new":
-        count_query = count_query.gte("posted_at", "now()::date")
+        count_query = count_query.gte("posted_at", today)
     if q:
-        count_query = count_query.or_(f"company.ilike.%{q}%,role.ilike.%{q}%")
+        safe_q = q.replace('"', "")
+        count_query = count_query.or_(f'company.ilike."%{safe_q}%",role.ilike."%{safe_q}%"')
 
     count_resp = count_query.execute()
     total = count_resp.count or 0
