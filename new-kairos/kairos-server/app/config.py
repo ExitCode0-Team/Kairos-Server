@@ -24,8 +24,9 @@ class Settings(BaseSettings):
     anthropic_base_url: str = "https://api.minimax.io/anthropic"
     anthropic_model: str = "MiniMax-M2.7"
 
-    # Optional: if set, callers must send  X-API-Secret: <value>
-    api_secret: str | None = None
+    # Supabase JWT secret — used to verify access tokens from the frontend
+    # Found at: Project Settings → API → JWT Settings → JWT Secret
+    supabase_jwt_secret: str = ""
 
     # Server
     host: str = "0.0.0.0"

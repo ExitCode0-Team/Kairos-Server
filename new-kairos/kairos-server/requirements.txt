@@ -1,5 +1,7 @@
 # Web API
 fastapi>=0.115.0
+PyJWT[crypto]>=2.8.0
+python-multipart>=0.0.9
 uvicorn[standard]>=0.32.0
 pydantic>=2.10.0
 pydantic-settings>=2.6.0

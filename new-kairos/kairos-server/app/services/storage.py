@@ -1,4 +1,4 @@
-"""Download CV PDFs from Supabase Storage."""
+"""Supabase Storage helpers — download and upload CV PDFs."""
 
 from __future__ import annotations
 
@@ -26,3 +26,25 @@ def download_cv_pdf(storage_path: str) -> bytes:
         return response
 
     raise RuntimeError(f"Unexpected download response type: {type(response)}")
+
+
+def upload_cv_pdf(storage_path: str, pdf_bytes: bytes) -> str:
+    """
+    Upload raw PDF bytes to the cv-uploads bucket.
+
+    storage_path — destination inside the bucket, e.g. "{user_id}/my-cv.pdf"
+
+    Uses upsert=True so re-uploading the same filename overwrites the previous file.
+    Returns storage_path on success.
+    Raises RuntimeError on failure.
+    """
+    settings = get_settings()
+    client = get_supabase()
+
+    client.storage.from_(settings.cv_uploads_bucket).upload(
+        path=storage_path,
+        file=pdf_bytes,
+        file_options={"content-type": "application/pdf", "upsert": "true"},
+    )
+
+    return storage_path
